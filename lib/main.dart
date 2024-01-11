@@ -643,9 +643,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 TextFormField(
                   controller: _trackerBaseUrlController,
-                  decoration: const InputDecoration(labelText: 'Timetracker base URL'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Please enter base url' : null,
+                  decoration: const InputDecoration(labelText: 'Timetracker server name'),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Please enter base url without protokol (https)'
+                      : null,
                 ),
                 TextFormField(
                   controller: _azureDefaultAreaPath,
