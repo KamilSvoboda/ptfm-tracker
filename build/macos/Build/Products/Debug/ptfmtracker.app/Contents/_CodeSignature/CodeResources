@@ -23,19 +23,19 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			XArXDq+Xxz9Fm4hNVhNFaww4BaQ=
+			l5DvmJiOKUby51u3MpiFafrWxBE=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"5c0ad70eaf97c73f459b884d5613456b0c3805a4"</string>
+			<string>cdhash H"9790ef98988e2946f2e75bb732988569fad6c411"</string>
 		</dict>
 		<key>Frameworks/FlutterMacOS.framework</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			BnNImbSAF5CsSX4OIIRlbmcj1mo=
+			NhLiyokGPsZr3iu+U3ibpeHcErU=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"06734899b4801790ac497e0e2084656e6723d66a"</string>
+			<string>cdhash H"3612e2ca89063ec66bde2bbe53789ba5e1dc12b5"</string>
 		</dict>
 		<key>Frameworks/libswiftAppKit.dylib</key>
 		<dict>
@@ -194,10 +194,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			GRrueE8rP1fnGeii7HcdjiwHTgM=
+			TdQQtolc5WrOFPev2T70kOMMn5Y=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"191aee784f2b3f57e719e8a2ec771d8e2c074e03"</string>
+			<string>cdhash H"4dd410b6895ce56ace14f7afd93ef490e30c9f96"</string>
 		</dict>
 		<key>Resources/AppIcon.icns</key>
 		<dict>

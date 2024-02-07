@@ -17,7 +17,7 @@ import 'package:ptfm_tracker/worklog.dart';
 GetIt getIt = GetIt.instance;
 const rowIconSize = 20.0;
 const rowIconButtonSize = 28.0;
-const extEnvironmentConst = 'Azure';
+//const extEnvironmentConst = 'Azure';
 const defaultAzureAreaPathConst = 'tmapy';
 const prefsPtfmUserName = 'ptfmUserName';
 const prefsPtfmPassword = 'ptfmPassword';
@@ -25,6 +25,7 @@ const prefsPtfmOrganization = 'ptfmOrganization';
 const prefsTrackerToken = 'trackerToken';
 const prefsTrackerBaseUrl = 'trackerBaseUrl';
 const prefsAzureAreaPath = 'azureDefaultAreaPath';
+const prefsDefEnvironment = 'defEnvironment';
 
 void main() {
   if (kReleaseMode) {
@@ -116,6 +117,9 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Resource> _resources = [];
   Resource? _activeResource;
 
+  final List<String> extEnvironments = [];
+  String? selectedExtEnvironment;
+
   late DateFormat shortFormat;
   late DateFormat standardFormat;
   late DateFormat longFormat;
@@ -151,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
           }).onError((error, _) {
             setState(() => _errorString = error.toString());
           });
-          _reloadMappings();
+          _loadEnvironments();
         } else {
           showDialog(
               context: context,
@@ -214,11 +218,39 @@ class _MyHomePageState extends State<MyHomePage> {
             borderRadius: const BorderRadius.all(Radius.circular(16.0)),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            padding: const EdgeInsets.only(left: 8.0),
             child: OutlinedButton.icon(
                 onPressed: _user != null ? () => _setCalendarRangeDialog(context) : null,
                 icon: const Icon(Icons.calendar_month_outlined),
                 label: Text('${shortFormat.format(fromDate)} - ${shortFormat.format(toDate)}')),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: DropdownButton<String>(
+              hint: const Text('Select mapping'),
+              isDense: true,
+              value: selectedExtEnvironment,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
+              items: extEnvironments
+                  .map<DropdownMenuItem<String>>((e) => DropdownMenuItem<String>(
+                        value: e,
+                        child: Text(e),
+                      ))
+                  .toList(),
+              onChanged: _user != null
+                  ? (value) {
+                      setState(() {
+                        selectedExtEnvironment = value!;
+                        SharedPreferences.getInstance()
+                            .then((pref) => pref.setString(prefsDefEnvironment, value));
+                        isLoading = true;
+                      });
+                      _reloadMappings(selectedExtEnvironment);
+                      _reloadAzureWorkLogs().then((value) => setState(() => isLoading = false));
+                    }
+                  : null,
+              borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+            ),
           ),
           OutlinedButton.icon(
               onPressed: _user != null ? () => _setAreaPathFilterDialog(context) : null,
@@ -230,7 +262,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ? () {
                       _errorString = null;
                       setState(() => isLoading = true);
-                      Future.wait([_reloadMappings(), _reloadAzureWorkLogs()])
+                      Future.wait([_loadEnvironments(), _reloadAzureWorkLogs()])
                           .then((value) => setState(() => isLoading = false));
                     }
                   : null,
@@ -270,7 +302,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     }).onError((error, _) {
                       setState(() => _errorString = error.toString());
                     });
-                    _reloadMappings();
+                    _loadEnvironments();
                   } else {
                     showDialog(
                         context: context,
@@ -363,13 +395,14 @@ class _MyHomePageState extends State<MyHomePage> {
           trackerBaseUrl: trackerBaseUrl!,
           user: _user,
           extCodeToEdit: extCodeToEdit,
-          ptfmActCodeToEdit: ptfmActCodeToEdit,
+          activityCodeToEdit: ptfmActCodeToEdit,
+          selectedExtEnvironment: selectedExtEnvironment!,
         ),
         fullscreenDialog: true,
       ),
     );
     setState(() => isLoading = true);
-    Future.wait([_reloadMappings(), _reloadAzureWorkLogs()])
+    Future.wait([_reloadMappings(selectedExtEnvironment), _reloadAzureWorkLogs()])
         .then((value) => setState(() => isLoading = false));
   }
 
@@ -429,7 +462,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ? workLogMappings.first.extCode
                         : _displayedWorkLogs[i].areaPath,
                     ptfmActCodeToEdit:
-                        workLogMappings.isNotEmpty ? workLogMappings.first.ptfmActCode : null);
+                        workLogMappings.isNotEmpty ? workLogMappings.first.activityCode : null);
               }
             },
             child: Padding(
@@ -461,7 +494,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: Text(workLogMappings.isNotEmpty
-                ? workLogMappings.map((e) => e.ptfmActCode).join('//')
+                ? workLogMappings.map((e) => e.activityCode).join('//')
                 : ''),
           ),
         ),
@@ -650,8 +683,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 TextFormField(
                   controller: _azureDefaultAreaPath,
-                  decoration:
-                      const InputDecoration(labelText: '$extEnvironmentConst default area path'),
+                  decoration: const InputDecoration(labelText: 'default area path'),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Please enter area path substring' : null,
                   onFieldSubmitted: (value) async {
@@ -706,7 +738,7 @@ class _MyHomePageState extends State<MyHomePage> {
           setState(() => _errorString = error.toString());
         });
         setState(() => isLoading = true);
-        Future.wait([_reloadMappings(), _reloadAzureWorkLogs()])
+        Future.wait([_loadEnvironments(), _reloadAzureWorkLogs()])
             .then((value) => setState(() => isLoading = false));
       } else {
         showDialog(
@@ -833,9 +865,43 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  Future _reloadMappings() {
-    return api.getMappings(extEnvironmentConst).then((value) {
+  /// Načtení externích prostředí a i samotných mapování
+  Future _loadEnvironments() async {
+    return api.getMappings(null).then((value) {
+      //vytaháme si výčet externích prostředí
+      extEnvironments.clear();
+      for (final m in value) {
+        if (!extEnvironments.contains(m.extEnvironment)) {
+          extEnvironments.add(m.extEnvironment);
+        }
+      }
+
+      //uživatelsky nastavené externí prostředí
+      SharedPreferences.getInstance().then((pref) {
+        final env = pref.getString(prefsDefEnvironment);
+        setState(() {
+          if (extEnvironments.contains(env)) {
+            selectedExtEnvironment = env;
+          } else {
+            selectedExtEnvironment = extEnvironments.first;
+          }
+        });
+      });
+
+      //uložíme si i všechna mapování
       _mappings = value;
+      _mappings.sort((a, b) => a.extCode.compareTo(b.extCode) != 0
+          ? a.extCode.compareTo(b.extCode)
+          : a.activityCode!.compareTo(b.activityCode!));
+    });
+  }
+
+  Future _reloadMappings(String? env) {
+    return api.getMappings(env).then((value) {
+      _mappings = value;
+      _mappings.sort((a, b) => a.extCode.compareTo(b.extCode) != 0
+          ? a.extCode.compareTo(b.extCode)
+          : a.activityCode!.compareTo(b.activityCode!));
     }).onError((error, _) {
       setState(() => _errorString = error.toString());
     });
@@ -876,7 +942,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _totalMhrs += wl.periodLength;
       if (_mappings
           .where((element) =>
-              element.extCode == wl.areaPath && element.extEnvironment == extEnvironmentConst)
+              element.extCode == wl.areaPath && element.extEnvironment == selectedExtEnvironment)
           .isNotEmpty) {
         _mappedMhrs += wl.periodLength;
       }
@@ -929,7 +995,7 @@ class _MyHomePageState extends State<MyHomePage> {
             .toList();
         //TODO: ještě ošetřit na přítomnost Activit v PTFM!!!
         for (final m in areaMappings) {
-          if (m.ptfmActCode != null) {
+          if (m.activityCode != null) {
             if (logs.containsKey(_displayedWorkLogs[i].shortDate)) {
               //z počtu minut uděláme desetinné číslo v hodinách, vynásobíme multiplikátorem a zaokrouhlíme na 2 desetinná místa
               logs[_displayedWorkLogs[i].shortDate]!.manHours += double.parse(
@@ -937,7 +1003,7 @@ class _MyHomePageState extends State<MyHomePage> {
             } else {
               logs[_displayedWorkLogs[i].shortDate] = Worklog(
                   date: _displayedWorkLogs[i].shortDate,
-                  activityCode: m.ptfmActCode!,
+                  activityCode: m.activityCode!,
                   resourceCode: _activeResource!.code,
                   manHours: double.parse(
                       ((_displayedWorkLogs[i].periodLength / 3600) * m.ratio).toStringAsFixed(2)));
@@ -1039,7 +1105,7 @@ class _MyHomePageState extends State<MyHomePage> {
       iconColor: Theme.of(context).colorScheme.error,
       title: const Text('Missing mappings!'),
       content: Text(
-          'There are some $extEnvironmentConst worklogs without PFTM mapping. Do you realy want to upload just ${(mappedSum / 3600).toStringAsFixed(2)} hours of worklogs with mapping?'),
+          'There are some worklogs without PFTM mapping. Do you realy want to upload just ${(mappedSum / 3600).toStringAsFixed(2)} hours of worklogs with mapping?'),
       actions: <Widget>[
         TextButton(
             onPressed: () {

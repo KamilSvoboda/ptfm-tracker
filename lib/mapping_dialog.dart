@@ -14,15 +14,17 @@ class MappingDialog extends StatefulWidget {
   final String trackerBaseUrl;
   final User? user;
   final String? extCodeToEdit;
-  final String? ptfmActCodeToEdit;
+  final String? activityCodeToEdit;
+  final String selectedExtEnvironment;
 
   const MappingDialog(
       {super.key,
       required this.trackerToken,
       required this.trackerBaseUrl,
       required this.user,
+      required this.selectedExtEnvironment,
       this.extCodeToEdit,
-      this.ptfmActCodeToEdit});
+      this.activityCodeToEdit});
   @override
   State<MappingDialog> createState() => _MappingDialogState();
 }
@@ -57,18 +59,18 @@ class _MappingDialogState extends State<MappingDialog> {
     isLoading = true;
     try {
       Future.wait([
-        api.getMappings(extEnvironmentConst).then((value) {
+        api.getMappings(widget.selectedExtEnvironment).then((value) {
           _mappings = value;
           //otevření dialog editace mapování ze základní obrazovky
           if (widget.extCodeToEdit != null) {
             //zkusíme mapování najít mezi již existujícími
             final m = _mappings.firstWhereOrNull((element) =>
                 element.extCode == widget.extCodeToEdit &&
-                element.extEnvironment == extEnvironmentConst &&
-                element.ptfmActCode == widget.ptfmActCodeToEdit);
+                element.extEnvironment == widget.selectedExtEnvironment &&
+                element.activityCode == widget.activityCodeToEdit);
             _showInsertUpdateDialog(context,
                 extCode: m?.extCode ?? widget.extCodeToEdit,
-                ptfmActCode: m?.ptfmActCode ?? widget.ptfmActCodeToEdit,
+                ptfmActCode: m?.activityCode ?? widget.activityCodeToEdit,
                 ratio: m?.ratio);
           }
           return _mappings.sort((a, b) => a.extCode.compareTo(b.extCode));
@@ -121,7 +123,7 @@ class _MappingDialogState extends State<MappingDialog> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('$extEnvironmentConst -> PTFM mappings'),
+        title: Text('${widget.selectedExtEnvironment} -> PTFM mappings'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           OutlinedButton.icon(
@@ -186,7 +188,7 @@ class _MappingDialogState extends State<MappingDialog> {
     for (int i = 0; i < _displayedMappings.length; i++) {
       isOdd = !isOdd;
       final act = _activities
-          .firstWhereOrNull((element) => element.code == _displayedMappings[i].ptfmActCode);
+          .firstWhereOrNull((element) => element.code == _displayedMappings[i].activityCode);
       rows.add(
           TableRow(decoration: isOdd ? BoxDecoration(color: Colors.grey[200]) : null, children: [
         TableCell(
@@ -217,7 +219,7 @@ class _MappingDialogState extends State<MappingDialog> {
           child: InkWell(
             onTap: () => _showInsertUpdateDialog(context,
                 extCode: _displayedMappings[i].extCode,
-                ptfmActCode: _displayedMappings[i].ptfmActCode,
+                ptfmActCode: _displayedMappings[i].activityCode,
                 ratio: _displayedMappings[i].ratio),
             child: const SizedBox(
               width: rowIconButtonSize,
@@ -244,12 +246,12 @@ class _MappingDialogState extends State<MappingDialog> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (_displayedMappings[i].ptfmActCode != null)
+                        if (_displayedMappings[i].activityCode != null)
                           const Icon(
                             Icons.error_outline,
                             color: Colors.red,
                           ),
-                        Text(_displayedMappings[i].ptfmActCode ?? ''),
+                        Text(_displayedMappings[i].activityCode ?? ''),
                       ],
                     ),
                   ),
@@ -257,7 +259,7 @@ class _MappingDialogState extends State<MappingDialog> {
         ),
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
-          child: userIsEditor && _displayedMappings[i].ptfmActCode != null
+          child: userIsEditor && _displayedMappings[i].activityCode != null
               ? Tooltip(
                   message: 'Edit/Copy ${_displayedMappings[i].extCode} mapping',
                   child: SizedBox(
@@ -271,7 +273,7 @@ class _MappingDialogState extends State<MappingDialog> {
                       onPressed: () {
                         _showInsertUpdateDialog(context,
                             extCode: _displayedMappings[i].extCode,
-                            ptfmActCode: _displayedMappings[i].ptfmActCode,
+                            ptfmActCode: _displayedMappings[i].activityCode,
                             ratio: _displayedMappings[i].ratio);
                       },
                       padding: const EdgeInsets.all(0.0),
@@ -282,7 +284,7 @@ class _MappingDialogState extends State<MappingDialog> {
         ),
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
-          child: userIsEditor && _displayedMappings[i].ptfmActCode != null
+          child: userIsEditor && _displayedMappings[i].activityCode != null
               ? Tooltip(
                   message: 'Delete ${_displayedMappings[i].extCode} mapping',
                   child: SizedBox(
@@ -300,7 +302,7 @@ class _MappingDialogState extends State<MappingDialog> {
                               return AlertDialog(
                                 title: const Text('Delete mapping?'),
                                 content: Text(
-                                    'Do you really want to delete \'${_displayedMappings[i].ptfmActCode}\' mapping?'),
+                                    'Do you really want to delete \'${_displayedMappings[i].activityCode}\' mapping?'),
                                 actions: [
                                   TextButton(
                                       onPressed: () => Navigator.of(context).pop(false),
@@ -326,7 +328,7 @@ class _MappingDialogState extends State<MappingDialog> {
                     ),
                   ),
                 )
-              : _displayedMappings[i].ptfmActCode == null
+              : _displayedMappings[i].activityCode == null
                   ?
                   //pokud není známé mapování, tak v posledním sloupci zobrazíme ikonu pro vložení/editaci
                   Tooltip(
@@ -342,7 +344,7 @@ class _MappingDialogState extends State<MappingDialog> {
                           onPressed: () {
                             _showInsertUpdateDialog(context,
                                 extCode: _displayedMappings[i].extCode,
-                                ptfmActCode: _displayedMappings[i].ptfmActCode,
+                                ptfmActCode: _displayedMappings[i].activityCode,
                                 ratio: _displayedMappings[i].ratio);
                           },
                           padding: const EdgeInsets.all(0.0),
@@ -367,10 +369,11 @@ class _MappingDialogState extends State<MappingDialog> {
     for (final wi in _workItems) {
       //pokud načtenou areaPath nenajdeme mezi existujícím mapováním, tak ji přidáme jako mapování bez vazby
       if (_displayedMappings.firstWhereOrNull((element) =>
-              element.extEnvironment == extEnvironmentConst && element.extCode == wi.areaPath) ==
+              element.extEnvironment == widget.selectedExtEnvironment &&
+              element.extCode == wi.areaPath) ==
           null) {
-        _displayedMappings
-            .add(ActivityMapping(extCode: wi.areaPath, extEnvironment: extEnvironmentConst));
+        _displayedMappings.add(
+            ActivityMapping(extCode: wi.areaPath, extEnvironment: widget.selectedExtEnvironment));
       }
     }
   }
@@ -397,7 +400,7 @@ class _MappingDialogState extends State<MappingDialog> {
                 TextFormField(
                   controller: _extCodeController,
                   decoration: const InputDecoration(
-                      labelText: '$extEnvironmentConst code',
+                      labelText: 'External code',
                       floatingLabelBehavior: FloatingLabelBehavior.auto),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Please enter external code' : null,
@@ -464,12 +467,12 @@ class _MappingDialogState extends State<MappingDialog> {
 
   void _onUpdateDialogSubmitted() {
     final mapping = ActivityMapping(
-        ptfmActCode: _ptfmCodeController.text.trim(),
-        extEnvironment: extEnvironmentConst,
+        activityCode: _ptfmCodeController.text.trim(),
+        extEnvironment: widget.selectedExtEnvironment,
         extCode: _extCodeController.text.trim(),
         ratio: double.parse(_mappingRatioController.text));
     _mappings.removeWhere((element) =>
-        element.ptfmActCode == mapping.ptfmActCode &&
+        element.activityCode == mapping.activityCode &&
         element.extEnvironment == mapping.extEnvironment &&
         element.extCode == mapping.extCode);
     _mappings.add(mapping);

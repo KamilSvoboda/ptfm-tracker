@@ -65,11 +65,11 @@ class HttpApiProvider {
   }
 
   ///Vrátí mapování aktivit do externích prostředí
-  Future<List<ActivityMapping>> getMappings(String environment) async {
+  Future<List<ActivityMapping>> getMappings(String? environment) async {
     if (_ptfmToken != null) {
       _headers[HttpHeaders.authorizationHeader] = _ptfmToken!;
       Map<String, dynamic>? queryParameters = {};
-      queryParameters['extEnvironment'] = environment;
+      if (environment != null) queryParameters['extEnvironment'] = environment;
       final uri = Uri.https(ptfmServerName, ptfmMappingsPath, queryParameters);
       log.finest(uri.toString());
       final response = await http.get(uri, headers: _headers).timeout(shortRequestTimeout);
@@ -159,7 +159,7 @@ class HttpApiProvider {
 
   ///Vrátí aktivity organizace
   ///[workspace] filtr aktivit, které patří do předaného workspace
-  ///[state] filtr aktivit, které mají hodnotu state pole předané hodnoty
+  ///[state] filtr aktivit, které mají hodnotu state podle předané hodnoty
   Future<List<Activity>> getActivities(String? workspace, List<String>? states) async {
     if (_ptfmToken != null) {
       _headers[HttpHeaders.authorizationHeader] = _ptfmToken!;

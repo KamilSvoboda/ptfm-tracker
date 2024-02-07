@@ -8,6 +8,14 @@
 		<data>
 		+FMTH3DnMcA8vn0/yYrncRQH0yM=
 		</data>
+		<key>Resources/shared_preferences_foundation_privacy.bundle/Contents/Info.plist</key>
+		<data>
+		8S9IokZ4NCASBWRls2AjBwana3E=
+		</data>
+		<key>Resources/shared_preferences_foundation_privacy.bundle/Contents/Resources/PrivacyInfo.xcprivacy</key>
+		<data>
+		6uLTlq7fgHHWA8emYDf4ImHC+AY=
+		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
@@ -16,6 +24,20 @@
 			<key>hash2</key>
 			<data>
 			SH/wb7rDtkyAyCAWLYzKz5HuQScxPaS47s6X8/FlpjE=
+			</data>
+		</dict>
+		<key>Resources/shared_preferences_foundation_privacy.bundle/Contents/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			18dYJ+S6RoWoLPnAtM4Q7UEGaN+cKj9p2NWPOSls2bs=
+			</data>
+		</dict>
+		<key>Resources/shared_preferences_foundation_privacy.bundle/Contents/Resources/PrivacyInfo.xcprivacy</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			BWQouTi9VwGKYAGdFcPB7i+nJ/I2h1mLu9k0hIsYCxo=
 			</data>
 		</dict>
 	</dict>

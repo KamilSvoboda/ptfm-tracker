@@ -1,0 +1,1 @@
+ /Users/kasvo/Development/Projects/ptfm-tracker/.dart_tool/flutter_build/636b735381b48598a9206ad8f3edc496/native_assets.yaml: 
