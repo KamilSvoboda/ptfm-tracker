@@ -1,8 +1,0 @@
-version: "Apple Swift version 5.8 (swiftlang-5.8.0.124.2 clang-1403.0.22.11.100)"
-options: "cabbcdcac18ae589d2e9020bdd5029f39d1f46e32e31bcb9d19d268678a4e3c7"
-build_start_time: [1698415681, 754928000]
-build_end_time: [1698415681, 828864000]
-inputs:
-  "/Users/kasvo/Development/Projects/ptfm-tracker/macos/Flutter/GeneratedPluginRegistrant.swift": !private [1698415648, 461981635]
-  "/Users/kasvo/Development/Projects/ptfm-tracker/macos/Runner/AppDelegate.swift": !private [1643904689, 0]
-  "/Users/kasvo/Development/Projects/ptfm-tracker/macos/Runner/MainFlutterWindow.swift": !private [1683832154, 940358219]
