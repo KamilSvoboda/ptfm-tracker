@@ -53,6 +53,7 @@ class _MappingDialogState extends State<MappingDialog> {
   final _mappingRatioController = TextEditingController();
 
   final _extCodeFilterController = TextEditingController();
+  final _mappingExtEnvController = TextEditingController();
 
   @override
   void initState() {
@@ -68,10 +69,7 @@ class _MappingDialogState extends State<MappingDialog> {
                 element.extCode == widget.extCodeToEdit &&
                 element.extEnvironment == widget.selectedExtEnvironment &&
                 element.activityCode == widget.activityCodeToEdit);
-            _showInsertUpdateDialog(context,
-                extCode: m?.extCode ?? widget.extCodeToEdit,
-                ptfmActCode: m?.activityCode ?? widget.activityCodeToEdit,
-                ratio: m?.ratio);
+            _showInsertUpdateDialog(context, editedMapping: m);
           }
           return _mappings.sort((a, b) => a.extCode.compareTo(b.extCode));
         }).onError((error, _) {
@@ -116,6 +114,7 @@ class _MappingDialogState extends State<MappingDialog> {
     _extCodeController.dispose();
     _extCodeFilterController.dispose();
     _mappingRatioController.dispose();
+    _mappingExtEnvController.dispose();
     super.dispose();
   }
 
@@ -126,10 +125,17 @@ class _MappingDialogState extends State<MappingDialog> {
         title: Text('${widget.selectedExtEnvironment} -> PTFM mappings'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
-          OutlinedButton.icon(
-              onPressed: () => _setAreaPathFilterDialog(context),
-              icon: const Icon(Icons.filter_alt_outlined),
-              label: Text(_extCodeFiterString)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: OutlinedButton.icon(
+                onPressed: () => _setAreaPathFilterDialog(context),
+                icon: const Icon(Icons.filter_alt_outlined),
+                label: Text(_extCodeFiterString)),
+          ),
+          IconButton(
+              tooltip: 'Save as new environment',
+              onPressed: () => _saveAsNewEnvDialog(context),
+              icon: Icon(Icons.save_as_outlined)),
         ],
       ),
       body: Column(
@@ -201,7 +207,7 @@ class _MappingDialogState extends State<MappingDialog> {
                 const SizedBox(width: 4.0),
                 Flexible(
                     child: Text(_displayedMappings[i].extCode,
-                        style: Theme.of(context).textTheme.bodyLarge)),
+                        style: Theme.of(context).textTheme.bodyMedium)),
               ],
             ),
           ),
@@ -211,16 +217,13 @@ class _MappingDialogState extends State<MappingDialog> {
           child: _displayedMappings[i].ratio != 1
               ? Text('x ${_displayedMappings[i].ratio.toStringAsFixed(2)}',
                   style:
-                      Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold))
+                      Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold))
               : Container(),
         ),
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
           child: InkWell(
-            onTap: () => _showInsertUpdateDialog(context,
-                extCode: _displayedMappings[i].extCode,
-                ptfmActCode: _displayedMappings[i].activityCode,
-                ratio: _displayedMappings[i].ratio),
+            onTap: () => _showInsertUpdateDialog(context, editedMapping: _displayedMappings[i]),
             child: const SizedBox(
               width: rowIconButtonSize,
               child: Icon(
@@ -236,11 +239,8 @@ class _MappingDialogState extends State<MappingDialog> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: act != null
-                ? Text('${act.name} (${act.group})',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge!
-                        .copyWith(fontWeight: FontWeight.bold))
+                ? Text('${act.group} / ${act.name} [${act.code}]',
+                    style: Theme.of(context).textTheme.bodyMedium)
                 : Container(
                     alignment: Alignment.centerLeft,
                     child: Row(
@@ -271,10 +271,7 @@ class _MappingDialogState extends State<MappingDialog> {
                         size: rowIconSize,
                       ),
                       onPressed: () {
-                        _showInsertUpdateDialog(context,
-                            extCode: _displayedMappings[i].extCode,
-                            ptfmActCode: _displayedMappings[i].activityCode,
-                            ratio: _displayedMappings[i].ratio);
+                        _showInsertUpdateDialog(context, editedMapping: _displayedMappings[i]);
                       },
                       padding: const EdgeInsets.all(0.0),
                     ),
@@ -342,10 +339,7 @@ class _MappingDialogState extends State<MappingDialog> {
                             size: rowIconSize,
                           ),
                           onPressed: () {
-                            _showInsertUpdateDialog(context,
-                                extCode: _displayedMappings[i].extCode,
-                                ptfmActCode: _displayedMappings[i].activityCode,
-                                ratio: _displayedMappings[i].ratio);
+                            _showInsertUpdateDialog(context, editedMapping: _displayedMappings[i]);
                           },
                           padding: const EdgeInsets.all(0.0),
                         ),
@@ -383,11 +377,10 @@ class _MappingDialogState extends State<MappingDialog> {
       widget.user!.roles != null &&
       (widget.user!.roles!.contains(roleManager) || widget.user!.roles!.contains(rolePowerUser));
 
-  void _showInsertUpdateDialog(BuildContext context,
-      {String? extCode, String? ptfmActCode, double? ratio}) {
-    _extCodeController.text = extCode ?? '';
-    _ptfmCodeController.text = ptfmActCode ?? '';
-    _mappingRatioController.text = ratio?.toString() ?? '1.0';
+  void _showInsertUpdateDialog(BuildContext context, {ActivityMapping? editedMapping}) {
+    _extCodeController.text = editedMapping?.extCode ?? '';
+    _ptfmCodeController.text = editedMapping?.activityCode ?? '';
+    _mappingRatioController.text = editedMapping?.ratio.toString() ?? '1.0';
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
@@ -425,7 +418,7 @@ class _MappingDialogState extends State<MappingDialog> {
                       value == null || value.isEmpty ? 'Please enter PTFM code' : null,
                   onFieldSubmitted: (value) {
                     if (_formKey.currentState!.validate()) {
-                      _onUpdateDialogSubmitted();
+                      _onUpdateDialogSubmitted(editedMapping: editedMapping);
                       Navigator.of(context).pop();
                     }
                   },
@@ -443,7 +436,7 @@ class _MappingDialogState extends State<MappingDialog> {
                           : null,
                   onFieldSubmitted: (value) {
                     if (_formKey.currentState!.validate()) {
-                      _onUpdateDialogSubmitted();
+                      _onUpdateDialogSubmitted(editedMapping: editedMapping);
                       Navigator.of(context).pop();
                     }
                   },
@@ -456,7 +449,7 @@ class _MappingDialogState extends State<MappingDialog> {
               child: const Text("Save"),
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  _onUpdateDialogSubmitted();
+                  _onUpdateDialogSubmitted(editedMapping: editedMapping);
                   Navigator.of(context).pop();
                 }
               })
@@ -465,24 +458,31 @@ class _MappingDialogState extends State<MappingDialog> {
     );
   }
 
-  void _onUpdateDialogSubmitted() {
+  void _onUpdateDialogSubmitted({ActivityMapping? editedMapping}) async {
+    if (editedMapping != null) {
+      //původní editované mapování nemuselo být úplné - proto není v DB, pouze v GUI
+      if (editedMapping.activityCode != null) {
+        await api.deleteActivityMappings([editedMapping]);
+      }
+      _mappings.removeWhere((element) =>
+          element.activityCode == editedMapping.activityCode &&
+          element.extEnvironment == editedMapping.extEnvironment &&
+          element.extCode == editedMapping.extCode);
+    }
     final mapping = ActivityMapping(
         activityCode: _ptfmCodeController.text.trim(),
         extEnvironment: widget.selectedExtEnvironment,
         extCode: _extCodeController.text.trim(),
         ratio: double.parse(_mappingRatioController.text));
-    _mappings.removeWhere((element) =>
-        element.activityCode == mapping.activityCode &&
-        element.extEnvironment == mapping.extEnvironment &&
-        element.extCode == mapping.extCode);
+
+    api.insertActivityMappings([mapping]).onError((error, _) {
+      setState(() => _errorString = error.toString());
+      return -1;
+    });
     _mappings.add(mapping);
     _mappings.sort((a, b) => a.extCode.compareTo(b.extCode));
     setState(() {
       _joinWorkItemsAndMappings();
-    });
-    api.insertActivityMappings([mapping]).onError((error, _) {
-      setState(() => _errorString = error.toString());
-      return -1;
     });
   }
 
@@ -582,5 +582,80 @@ class _MappingDialogState extends State<MappingDialog> {
                 .toList(),
           );
         });
+  }
+
+  /// Dialog uložení zobrazených mapování do nového protředí
+  void _saveAsNewEnvDialog(
+    BuildContext context,
+  ) {
+    _mappingExtEnvController.text = widget.selectedExtEnvironment;
+    showDialog(
+      context: context,
+      builder: (BuildContext newContext) => AlertDialog(
+        title: const Text('Save as new'),
+        content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                //Uživateli umožníme změnit identifikátor externího prostředí. Díky tomu je možné "kopírovat" záznamy do nového prostředí
+                TextFormField(
+                  controller: _mappingExtEnvController,
+                  decoration: const InputDecoration(
+                    labelText: 'External code',
+                    floatingLabelBehavior: FloatingLabelBehavior.auto,
+                    isDense: true,
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'cannot be empty' : null,
+                  onFieldSubmitted: (value) {
+                    if (_formKey.currentState!.validate()) {
+                      _saveAsNewEnvDialogSubmitted(context);
+                      Navigator.of(newContext).pop();
+                    }
+                  },
+                ),
+              ],
+            )),
+        actions: [
+          TextButton(child: const Text('Cancel'), onPressed: () => Navigator.of(newContext).pop()),
+          TextButton(
+              child: const Text('Save'),
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  _saveAsNewEnvDialogSubmitted(context);
+                  Navigator.of(newContext).pop();
+                }
+              })
+        ],
+      ),
+    );
+  }
+
+  /// Uložit zobrazené záznamy do nového prostředí
+  Future _saveAsNewEnvDialogSubmitted(BuildContext context) async {
+    int count = 0;
+    final newEnv = _mappingExtEnvController.text.trim();
+    if (newEnv.isNotEmpty) {
+      for (final m in _displayedMappings) {
+        if (m.activityCode != null) {
+          final mapping = ActivityMapping(
+              extEnvironment: newEnv,
+              activityCode: m.activityCode,
+              extCode: m.extCode,
+              ratio: m.ratio,
+              note: m.note);
+          await api.insertActivityMappings([mapping]);
+          debugPrint(
+              '${mapping.extCode} - ${mapping.activityCode} saved to ${mapping.extEnvironment}');
+          count++;
+        }
+      }
+
+      if (mounted) {
+        return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('$count mappings saved to $newEnv'),
+        ));
+      }
+    }
   }
 }
