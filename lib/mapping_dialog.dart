@@ -135,7 +135,7 @@ class _MappingDialogState extends State<MappingDialog> {
           IconButton(
               tooltip: 'Save as new environment',
               onPressed: () => _saveAsNewEnvDialog(context),
-              icon: Icon(Icons.save_as_outlined)),
+              icon: const Icon(Icons.save_as_outlined)),
         ],
       ),
       body: Column(
@@ -644,14 +644,15 @@ class _MappingDialogState extends State<MappingDialog> {
               extCode: m.extCode,
               ratio: m.ratio,
               note: m.note);
-          await api.insertActivityMappings([mapping]);
-          debugPrint(
-              '${mapping.extCode} - ${mapping.activityCode} saved to ${mapping.extEnvironment}');
-          count++;
+          if (await api.insertActivityMappings([mapping]) > 0) {
+            debugPrint(
+                '${mapping.extCode} - ${mapping.activityCode} saved to ${mapping.extEnvironment}');
+            count++;
+          }
         }
       }
 
-      if (mounted) {
+      if (context.mounted) {
         return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('$count mappings saved to $newEnv'),
         ));

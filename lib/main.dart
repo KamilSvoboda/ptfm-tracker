@@ -625,7 +625,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   prefs.setString(prefsPtfmUserName, ptfmUserName!);
                   prefs.setString(prefsPtfmPassword, ptfmPassword!);
                   prefs.setString(prefsPtfmOrganization, ptfmOrganization!);
-                  if (mounted) Navigator.of(context).pop();
+                  if (context.mounted) Navigator.of(context).pop();
                 }
               })
         ],
@@ -689,7 +689,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   onFieldSubmitted: (value) async {
                     if (_settingsFormKey.currentState!.validate()) {
                       await _onSettingsSubmit();
-                      if (mounted) Navigator.of(context).pop();
+                      if (context.mounted) Navigator.of(context).pop();
                     }
                   },
                 ),
@@ -702,7 +702,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () async {
                 if (_settingsFormKey.currentState!.validate()) {
                   await _onSettingsSubmit();
-                  if (mounted) Navigator.of(context).pop();
+                  if (context.mounted) Navigator.of(context).pop();
                 }
               })
         ],
