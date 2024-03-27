@@ -414,8 +414,11 @@ class _MyHomePageState extends State<MyHomePage> {
       isOdd = (i == 0 || _displayedWorkLogs[i - 1].shortDate != _displayedWorkLogs[i].shortDate)
           ? !isOdd
           : isOdd;
-      List<ActivityMapping> workLogMappings =
-          _mappings.where((element) => element.extCode == _displayedWorkLogs[i].areaPath).toList();
+      List<ActivityMapping> workLogMappings = _mappings
+          .where((element) =>
+              element.extEnvironment == selectedExtEnvironment &&
+              element.extCode == _displayedWorkLogs[i].areaPath)
+          .toList();
       rows.add(
           TableRow(decoration: isOdd ? BoxDecoration(color: Colors.grey[200]) : null, children: [
         TableCell(
@@ -942,7 +945,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _totalMhrs += wl.periodLength;
       if (_mappings
           .where((element) =>
-              element.extCode == wl.areaPath && element.extEnvironment == selectedExtEnvironment)
+              element.extEnvironment == selectedExtEnvironment && element.extCode == wl.areaPath)
           .isNotEmpty) {
         _mappedMhrs += wl.periodLength;
       }
@@ -954,8 +957,11 @@ class _MyHomePageState extends State<MyHomePage> {
     var mappedSum = 0;
     var missingMappings = false;
     for (int i = 0; i < _displayedWorkLogs.length; i++) {
-      List<ActivityMapping> areaCode =
-          _mappings.where((element) => element.extCode == _displayedWorkLogs[i].areaPath).toList();
+      List<ActivityMapping> areaCode = _mappings
+          .where((element) =>
+              element.extEnvironment == selectedExtEnvironment &&
+              element.extCode == _displayedWorkLogs[i].areaPath)
+          .toList();
       //TODO: ještě ošetřit na přítomnost Activit v PTFM!!!
       if (areaCode.isNotEmpty) {
         mappedSum += _displayedWorkLogs[i].periodLength;
@@ -991,7 +997,9 @@ class _MyHomePageState extends State<MyHomePage> {
     if (ptfmOrganization != null && _activeResource != null) {
       for (int i = 0; i < _displayedWorkLogs.length; i++) {
         List<ActivityMapping> areaMappings = _mappings
-            .where((element) => element.extCode == _displayedWorkLogs[i].areaPath)
+            .where((element) =>
+                element.extEnvironment == selectedExtEnvironment &&
+                element.extCode == _displayedWorkLogs[i].areaPath)
             .toList();
         //TODO: ještě ošetřit na přítomnost Activit v PTFM!!!
         for (final m in areaMappings) {
