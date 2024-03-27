@@ -69,7 +69,7 @@ class _MappingDialogState extends State<MappingDialog> {
                 element.extCode == widget.extCodeToEdit &&
                 element.extEnvironment == widget.selectedExtEnvironment &&
                 element.activityCode == widget.activityCodeToEdit);
-            _showInsertUpdateDialog(context, editedMapping: m);
+            _showInsertUpdateDialog(context, newExtCode: widget.extCodeToEdit, editedMapping: m);
           }
           return _mappings.sort((a, b) => a.extCode.compareTo(b.extCode));
         }).onError((error, _) {
@@ -377,8 +377,11 @@ class _MappingDialogState extends State<MappingDialog> {
       widget.user!.roles != null &&
       (widget.user!.roles!.contains(roleManager) || widget.user!.roles!.contains(rolePowerUser));
 
-  void _showInsertUpdateDialog(BuildContext context, {ActivityMapping? editedMapping}) {
-    _extCodeController.text = editedMapping?.extCode ?? '';
+  /// Zobrazí editační formulář mapování
+  /// Pokud je předán [newExtCode], tak se naplní do controlleru a jinak se použije předané mapování [editedMapping]
+  void _showInsertUpdateDialog(BuildContext context,
+      {String? newExtCode, ActivityMapping? editedMapping}) {
+    _extCodeController.text = newExtCode ?? editedMapping?.extCode ?? '';
     _ptfmCodeController.text = editedMapping?.activityCode ?? '';
     _mappingRatioController.text = editedMapping?.ratio.toString() ?? '1.0';
     showDialog(
