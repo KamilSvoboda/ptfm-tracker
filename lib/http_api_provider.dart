@@ -23,7 +23,7 @@ class HttpApiProvider {
   final longRequestTimeout = const Duration(seconds: 30);
 
   //final String ptfmServerName = "localhost:7292";
-  final String ptfmServerName = "www.manager.technology";
+  final String ptfmServerName = "portfolio.manager.technology";
 
   static const String ptfmLoginPath = "api/v1/login";
   static const String ptfmWorklogsPath = "api/v1/worklogs";
@@ -43,13 +43,20 @@ class HttpApiProvider {
     HttpHeaders.contentTypeHeader: 'application/json',
   };
 
-  /// Přihlásí uživatele - povinné je jméno a heslo. Volitelně pak organizace při přihlašování do konkrétní organizace
+  /// Přihlásí uživatele - povinné je tenant, jméno a heslo. Volitelně pak organizace při přihlašování do konkrétní organizace
   Future<User?> login(
-      {required String userName, required String password, String? organizationCode}) async {
+      {required tenant,
+      required String userName,
+      required String password,
+      String? organizationCode}) async {
     final uri = Uri.https(ptfmServerName, ptfmLoginPath);
     log.finest(uri.toString());
-    final body =
-        json.encode({'userName': userName, 'password': password, 'organization': organizationCode});
+    final body = json.encode({
+      'tenant': tenant,
+      'userName': userName,
+      'password': password,
+      'organization': organizationCode
+    });
     final response =
         await http.post(uri, headers: _headers, body: body).timeout(longRequestTimeout);
     if (response.statusCode >= 200 && response.statusCode < 300) {

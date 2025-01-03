@@ -22,6 +22,7 @@ const defaultAzureAreaPathConst = 'tmapy';
 const prefsPtfmUserName = 'ptfmUserName';
 const prefsPtfmPassword = 'ptfmPassword';
 const prefsPtfmOrganization = 'ptfmOrganization';
+const prefsPtfmTenant = 'ptfmTenant';
 const prefsTrackerToken = 'trackerToken';
 const prefsTrackerBaseUrl = 'trackerBaseUrl';
 const prefsAzureAreaPath = 'azureDefaultAreaPath';
@@ -82,6 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final _ptfmUserNameController = TextEditingController();
   final _ptfmUserPasswordController = TextEditingController();
   final _ptfmOrganizationController = TextEditingController();
+  final _ptfmTenantController = TextEditingController();
   final _trackerTokenController = TextEditingController();
   final _trackerBaseUrlController = TextEditingController();
   final _azureDefaultAreaPath = TextEditingController();
@@ -95,6 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? ptfmUserName;
   String? ptfmPassword;
   String? ptfmOrganization;
+  String? ptfmTenant;
   String? trackerToken;
   String? trackerBaseUrl;
   String azureArePath = defaultAzureAreaPathConst;
@@ -140,6 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ptfmUserName = prefs.getString(prefsPtfmUserName) ?? '';
       ptfmPassword = prefs.getString(prefsPtfmPassword) ?? '';
       ptfmOrganization = prefs.getString(prefsPtfmOrganization) ?? '';
+      ptfmTenant = prefs.getString(prefsPtfmTenant) ?? 'tmapy'; //TODO: vyhodit výchozí hodnotu
       trackerToken = prefs.getString(prefsTrackerToken) ?? '';
       trackerBaseUrl = prefs.getString(prefsTrackerBaseUrl) ?? '';
       azureArePath = prefs.getString(prefsAzureAreaPath) ?? defaultAzureAreaPathConst;
@@ -178,6 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _ptfmUserNameController.dispose();
     _ptfmUserPasswordController.dispose();
     _ptfmOrganizationController.dispose();
+    _ptfmTenantController.dispose();
     _trackerBaseUrlController.dispose();
     _trackerTokenController.dispose();
     _azureDefaultAreaPath.dispose();
@@ -566,12 +571,16 @@ class _MyHomePageState extends State<MyHomePage> {
     if (ptfmUserName != null &&
         ptfmPassword != null &&
         ptfmOrganization != null &&
+        ptfmTenant != null &&
         ptfmUserName!.isNotEmpty &&
         ptfmPassword!.isNotEmpty &&
         ptfmOrganization!.isNotEmpty) {
       return api
           .login(
-              userName: ptfmUserName!, password: ptfmPassword!, organizationCode: ptfmOrganization)
+              tenant: ptfmTenant,
+              userName: ptfmUserName!,
+              password: ptfmPassword!,
+              organizationCode: ptfmOrganization)
           .onError((error, _) {
         setState(() => _errorString = error.toString());
         return null;
@@ -584,6 +593,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _ptfmUserNameController.text = ptfmUserName ?? '';
     _ptfmUserPasswordController.text = ptfmPassword ?? '';
     _ptfmOrganizationController.text = ptfmOrganization ?? '';
+    _ptfmTenantController.text = ptfmTenant ?? '';
     await showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
@@ -612,6 +622,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Please enter organization code' : null,
                 ),
+                TextFormField(
+                  controller: _ptfmTenantController,
+                  decoration: const InputDecoration(labelText: 'PTFM tenant code'),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Please enter tenant code' : null,
+                ),
               ],
             )),
         actions: [
@@ -624,10 +640,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   ptfmUserName = _ptfmUserNameController.text;
                   ptfmPassword = _ptfmUserPasswordController.text;
                   ptfmOrganization = _ptfmOrganizationController.text;
+                  ptfmTenant = _ptfmTenantController.text;
 
                   prefs.setString(prefsPtfmUserName, ptfmUserName!);
                   prefs.setString(prefsPtfmPassword, ptfmPassword!);
                   prefs.setString(prefsPtfmOrganization, ptfmOrganization!);
+                  prefs.setString(prefsPtfmTenant, ptfmTenant!);
                   if (context.mounted) Navigator.of(context).pop();
                 }
               })
@@ -640,6 +658,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _ptfmUserNameController.text = ptfmUserName ?? '';
     _ptfmUserPasswordController.text = ptfmPassword ?? '';
     _ptfmOrganizationController.text = ptfmOrganization ?? '';
+    _ptfmTenantController.text = ptfmTenant ?? '';
     _trackerTokenController.text = trackerToken ?? '';
     _trackerBaseUrlController.text = trackerBaseUrl ?? '';
     _azureDefaultAreaPath.text = azureArePath;
@@ -670,6 +689,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   decoration: const InputDecoration(labelText: 'PTFM organization code'),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Please enter organization code' : null,
+                ),
+                TextFormField(
+                  controller: _ptfmTenantController,
+                  decoration: const InputDecoration(labelText: 'PTFM tenant code'),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Please enter tenant code' : null,
                 ),
                 TextFormField(
                   controller: _trackerTokenController,
@@ -718,6 +743,7 @@ class _MyHomePageState extends State<MyHomePage> {
     ptfmUserName = _ptfmUserNameController.text;
     ptfmPassword = _ptfmUserPasswordController.text;
     ptfmOrganization = _ptfmOrganizationController.text;
+    ptfmTenant = _ptfmTenantController.text;
     trackerToken = _trackerTokenController.text;
     trackerBaseUrl = _trackerBaseUrlController.text;
     azureArePath = _azureDefaultAreaPath.text;
@@ -725,6 +751,7 @@ class _MyHomePageState extends State<MyHomePage> {
     prefs.setString(prefsPtfmUserName, ptfmUserName!);
     prefs.setString(prefsPtfmPassword, ptfmPassword!);
     prefs.setString(prefsPtfmOrganization, ptfmOrganization!);
+    prefs.setString(prefsPtfmTenant, ptfmTenant!);
     prefs.setString(prefsTrackerToken, trackerToken!);
     prefs.setString(prefsTrackerBaseUrl, trackerBaseUrl!);
     prefs.setString(prefsAzureAreaPath, azureArePath);
